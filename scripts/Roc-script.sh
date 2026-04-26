@@ -1,6 +1,6 @@
 # 修改默认IP & 固件名称 & 编译署名和时间
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
-sed -i "s/hostname='.*'/hostname='Roc'/g" package/base-files/files/bin/config_generate
+sed -i "s/hostname='.*'/hostname='OpenWrt'/g" package/base-files/files/bin/config_generate
 sed -i "s#_('Firmware Version'), (L\.isObject(boardinfo\.release) ? boardinfo\.release\.description + ' / ' : '') + (luciversion || ''),# \
             _('Firmware Version'),\n \
             E('span', {}, [\n \
@@ -65,6 +65,35 @@ git clone --depth=1 https://github.com/destan19/OpenAppFilter.git package/OpenAp
 git clone --depth=1 https://github.com/laipeng668/luci-app-gecoosac package/luci-app-gecoosac
 git clone --depth=1 https://github.com/NONGFAH/luci-app-athena-led package/luci-app-athena-led
 chmod +x package/luci-app-athena-led/root/etc/init.d/athena_led package/luci-app-athena-led/root/usr/sbin/athena-led
+
+
+# 修改默认 WiFi 配置
+cat > package/base-files/files/etc/uci-defaults/99-custom-wifi <<EOF
+uci -q batch <<EOT
+  # 配置 radio0 (通常为 5G)
+  set wireless.radio0.disabled='0'
+  set wireless.radio0.htmode='HE80'
+  set wireless.radio0.country='CN'
+  
+  # 配置 radio1 (通常为 2.4G)
+  set wireless.radio1.disabled='0'
+  set wireless.radio1.htmode='HT40'
+  set wireless.radio1.country='CN'
+
+  # 修改默认接口配置 (假设默认有 default_radio0 和 default_radio1)
+  # 5G 部分
+  set wireless.default_radio0.ssid='OpenWrt_5G'
+  set wireless.default_radio0.encryption='psk2'
+  set wireless.default_radio0.key='password'
+
+  # 2.4G 部分
+  set wireless.default_radio1.ssid='OpenWrt_2.4G'
+  set wireless.default_radio1.encryption='psk2'
+  set wireless.default_radio1.key='password'
+
+  commit wireless
+EOT
+EOF
 
 ### PassWall & OpenClash ###
 
